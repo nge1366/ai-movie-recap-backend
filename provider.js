@@ -132,4 +132,5 @@ async function cancelRenderJob() {
 }
 
 export function isConfigured() { return configured(); }
-export { providerName, listVideoModels, testConnection, submitRenderJob, getRenderJob, cancelRenderJob };
+
+export { adapterContract, providerName, listVideoModels, testConnection, submitRenderJob, getRenderJob, cancelRenderJob };
