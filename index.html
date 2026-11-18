@@ -1,105 +1,128 @@
+HTML
+
 <!DOCTYPE html>
 <html lang="my">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AI MOVIE RECAP STUDIO</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      padding: 20px;
-      background: #10121b;
-      color: #fff;
-      font-family: Arial, sans-serif;
-    }
-    .container {
-      max-width: 760px;
-      margin: auto;
-    }
-    header {
-      text-align: center;
-      padding: 25px 10px;
-    }
-    h1 { color: #a78bfa; font-size: 26px; }
-    .panel {
-      background: #1c2030;
-      border: 1px solid #34394e;
-      border-radius: 14px;
-      padding: 18px;
-      margin-bottom: 18px;
-    }
-    label {
-      display: block;
-      margin: 14px 0 8px;
-      color: #d7d9e5;
-    }
-    input, textarea, select {
-      width: 100%;
-      padding: 13px;
-      border-radius: 9px;
-      border: 1px solid #454b62;
-      background: #111522;
-      color: white;
-      font-size: 15px;
-    }
-    textarea { min-height: 130px; resize: vertical; }
-    button {
-      width: 100%;
-      padding: 14px;
-      margin-top: 15px;
-      border: 0;
-      border-radius: 9px;
-      background: #8058e8;
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-    }
-    .note { color: #aeb4c8; font-size: 13px; }
-    #count { text-align: right; color: #aeb4c8; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI MOVIE RECAP STUDIO</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:16px;background:#10121b;color:#fff;font-family:Arial,sans-serif}
+main{max-width:760px;margin:auto}
+header{text-align:center;padding:20px 8px}
+h1{color:#a78bfa;font-size:25px}
+.panel{background:#1c2030;border:1px solid #34394e;border-radius:14px;padding:17px;margin:15px 0}
+label{display:block;margin:14px 0 8px;color:#ddd}
+input,textarea,select{width:100%;padding:13px;border-radius:9px;border:1px solid #454b62;background:#111522;color:white;font-size:15px}
+textarea{min-height:120px;resize:vertical}
+button{width:100%;padding:14px;margin-top:14px;border:0;border-radius:9px;background:#8058e8;color:white;font-size:16px;font-weight:bold}
+.secondary{background:#34394e}
+.note{color:#aeb4c8;font-size:13px;line-height:1.6}
+#count{text-align:right;color:#aeb4c8;font-size:13px}
+#result{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6;background:#111522;padding:12px;border-radius:9px;min-height:50px}
+</style>
 </head>
 <body>
-  <main class="container">
-    <header>
-      <h1>🎬 AI MOVIE RECAP STUDIO</h1>
-      <p>AI ရုပ်ရှင်ဇာတ်လမ်း ဖန်တီးရေးစတူဒီယို</p>
-    </header>
+<main>
+<header>
+<h1>🎬 AI MOVIE RECAP STUDIO</h1>
+<p>AI ရုပ်ရှင်ဇာတ်လမ်း ဖန်တီးရေးစတူဒီယို</p>
+<p class="note">ဇာတ်လမ်းမှ ဗီဒီယိုအထိ တစ်ဆင့်ချင်း ဖန်တီးရန်</p>
+</header>
 
-    <section class="panel">
-      <h2>🎥 ဇာတ်လမ်း ဖန်တီးရန်</h2>
+<section class="panel">
+<h2>🎥 ဇာတ်လမ်း ဖန်တီးရန်</h2>
 
-      <label>ဇာတ်လမ်းအမည်</label>
-      <input id="title" placeholder="ဇာတ်လမ်းအမည် ရေးပါ">
+<label>ဇာတ်လမ်းအမည်</label>
+<input id="title" maxlength="100" placeholder="ဇာတ်လမ်းအမည် ရေးပါ">
 
-      <label>ဇာတ်လမ်းအကြောင်းအရာ</label>
-      <textarea id="prompt" maxlength="900"
-        placeholder="ဖန်တီးလိုသော ဇာတ်လမ်းအကြောင်း ရေးပါ..."></textarea>
-      <div id="count">0 / 900</div>
+<label>ဇာတ်လမ်းအကြောင်းအရာ</label>
+<textarea id="story" placeholder="ဖန်တီးလိုသော ဇာတ်လမ်းအကြောင်း ရေးပါ..."></textarea>
 
-      <label>ဗီဒီယိုအရည်အသွေး</label>
-      <select id="resolution">
-        <option value="720p">720p</option>
-        <option value="1080p">1080p</option>
-      </select>
+<label>ဗီဒီယို Prompt</label>
+<textarea id="prompt" maxlength="900" placeholder="AI ဗီဒီယိုအတွက် Prompt ရေးပါ..."></textarea>
+<div id="count">0 / 900</div>
 
-      <label>ဗီဒီယိုပုံစံ</label>
-      <select id="ratio">
-        <option value="9:16">TikTok / ဖုန်းဒေါင်လိုက်</option>
-        <option value="16:9">YouTube / အလျားလိုက်</option>
-      </select>
+<label>ဇာတ်ဝင်ခန်း အရေအတွက်</label>
+<select id="scenes">
+<option value="6">၆ ခန်း</option>
+<option value="9">၉ ခန်း</option>
+<option value="12">၁၂ ခန်း</option>
+</select>
 
-      <p class="note">မှတ်ချက် — ဒီမျက်နှာပြင်က ပထမအဆင့်ပုံစံဖြစ်ပြီး ဗီဒီယိုထုတ်လုပ်မှုကို Backend နဲ့ ချိတ်ဆက်ဖို့ ကျန်ပါသေးတယ်။</p>
-    </section>
-  </main>
+<label>ဗီဒီယိုအရည်အသွေး</label>
+<select id="resolution">
+<option value="720p">720p</option>
+<option value="1080p">1080p</option>
+</select>
 
-  <script>
-    const promptBox = document.getElementById("prompt");
-    const count = document.getElementById("count");
+<label>ဗီဒီယိုပုံစံ</label>
+<select id="ratio">
+<option value="9:16">TikTok / ဖုန်းဒေါင်လိုက်</option>
+<option value="16:9">YouTube / အလျားလိုက်</option>
+</select>
 
-    promptBox.addEventListener("input", () => {
-      count.textContent = [...promptBox.value].length + " / 900";
-    });
-  </script>
+<label>ဇာတ်လမ်းပုံစံ</label>
+<select id="style">
+<option>လက်တွေ့ဆန်သော လူသရုပ်ဆောင်ပုံစံ</option>
+<option>ဟာသဇာတ်လမ်း</option>
+<option>စိတ်လှုပ်ရှားဖွယ် ဇာတ်လမ်း</option>
+<option>အချစ်ဇာတ်လမ်း</option>
+</select>
+
+<button id="prepare">✨ Prompt ပြင်ဆင်မည်</button>
+</section>
+
+<section class="panel">
+<h2>📋 ပြင်ဆင်ထားသော Prompt</h2>
+<div id="result">Prompt မပြင်ဆင်ရသေးပါ။</div>
+<button class="secondary" id="copy">စာသားကူးယူရန်</button>
+<p class="note">ဤအဆင့်တွင် Prompt ကိုသာ ပြင်ဆင်ပေးပါသည်။ ဗီဒီယိုထုတ်လုပ်ရန် Backend ချိတ်ဆက်မှု လိုအပ်ပါသေးသည်။</p>
+</section>
+</main>
+
+<script>
+const promptBox=document.getElementById("prompt");
+const count=document.getElementById("count");
+const result=document.getElementById("result");
+
+promptBox.addEventListener("input",()=>{
+ count.textContent=[...promptBox.value].length+" / 900";
+});
+
+document.getElementById("prepare").addEventListener("click",()=>{
+ const title=document.getElementById("title").value.trim();
+ const story=document.getElementById("story").value.trim();
+ const prompt=promptBox.value.trim();
+
+ if(!title||!story||!prompt){
+  result.textContent="ဇာတ်လမ်းအမည်၊ ဇာတ်လမ်းအကြောင်းအရာနဲ့ Prompt ကို ဖြည့်ပေးပါ။";
+  return;
+ }
+ if([...prompt].length>900){
+  result.textContent="Prompt က စာလုံး ၉၀၀ ကျော်နေပါတယ်။";
+  return;
+ }
+
+ result.textContent=
+ "ဇာတ်လမ်းအမည်: "+title+
+ "\nဇာတ်လမ်းအကြောင်း: "+story+
+ "\nဇာတ်ဝင်ခန်း: "+document.getElementById("scenes").value+
+ "\nအရည်အသွေး: "+document.getElementById("resolution").value+
+ "\nဗီဒီယိုပုံစံ: "+document.getElementById("ratio").value+
+ "\nဇာတ်လမ်းပုံစံ: "+document.getElementById("style").value+
+ "\n\nPrompt:\n"+prompt;
+});
+
+document.getElementById("copy").addEventListener("click",async()=>{
+ try{
+  await navigator.clipboard.writeText(result.textContent);
+  alert("စာသားကို ကူးယူပြီးပါပြီ။");
+ }catch(e){
+  alert("စာသားကို ဖိထားပြီး ကိုယ်တိုင်ကူးယူပါ။");
+ }
+});
+</script>
 </body>
 </html>
