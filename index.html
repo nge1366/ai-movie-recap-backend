@@ -134,6 +134,36 @@ document.getElementById("copy").addEventListener("click",async()=>{
   alert("စာသားကို ဖိထားပြီး ကိုယ်တိုင်ကူးယူပါ။");
  }
 });
+ const BACKEND_URL = "https://ai-movie-recap-backend-1.onrender.com";
+
+document.getElementById("testBackend").addEventListener("click", async () => {
+  const token = document.getElementById("backendToken").value.trim();
+  const status = document.getElementById("renderStatus");
+
+  if (!token) {
+    status.textContent = "Backend Token ထည့်ပေးပါ။";
+    return;
+  }
+
+  status.textContent = "ချိတ်ဆက်နေပါပြီ...";
+
+  try {
+    const response = await fetch(BACKEND_URL + "/provider/test", {
+      method: "GET",
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    });
+
+    const data = await response.json();
+    status.textContent = response.ok
+      ? "Backend ချိတ်ဆက်မှု အောင်မြင်ပါပြီ။"
+      : "ချိတ်ဆက်မှု မအောင်မြင်ပါ။ Token နှင့် API ကို စစ်ပါ။";
+
+  } catch (error) {
+    status.textContent = "Backend ချိတ်ဆက်မရပါ။";
+  }
+});
 </script>
 </body>
 </html>
