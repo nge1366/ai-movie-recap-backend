@@ -60,12 +60,30 @@ async function listVideoModels() {
   const data = await request('/videos/models');
   return Array.isArray(data.data) ? data.data : [];
 }
+
 async function testConnection() {
-  if (!configured()) return { ok: false, configured: false, message: 'VIDEO_PROVIDER, OPENROUTER_API_KEY, VIDEO_MODEL ကို Backend environment ထဲမှာ သတ်မှတ်ပါ။' };
+  if (!configured()) {
+    return {
+      ok: false,
+      configured: false,
+      message: 'VIDEO_PROVIDER, OPENROUTER_API_KEY, VIDEO_MODEL ကို Backend environment ထဲမှာ သတ်မှတ်ပါ။'
+    };
+  }
+
+  // API Key ကို OpenRouter ရဲ့ authenticated endpoint နဲ့ စစ်ဆေးမယ်
+  await request('/key');
+
   const models = await listVideoModels();
-  const selected = models.find(m => m.id === MODEL || m.canonical_slug === MODEL);
+  const selected = models.find(
+    m => m.id === MODEL || m.canonical_slug === MODEL
+  );
+
   return {
-    ok: Boolean(selected), configured: true, provider: 'OpenRouter', model: MODEL,
+    ok: true,
+    configured: true,
+    keyVerified: true,
+    provider: 'OpenRouter',
+    model: MODEL,
     modelAvailable: Boolean(selected),
     modelInfo: selected ? {
       name: selected.name || selected.id,
@@ -75,7 +93,9 @@ async function testConnection() {
       pricingSkus: selected.pricing_skus || null
     } : null,
     modelCount: models.length,
-    message: selected ? 'API Key မှန်ကန်ပြီး ရွေးထားသော Model ကို တွေ့ရှိပါတယ်။' : 'API Key အလုပ်လုပ်သော်လည်း ရွေးထားသော Model ကို မတွေ့ပါ။'
+    message: selected
+      ? 'API Key အတည်ပြုပြီး ရွေးထားသော Model ကို တွေ့ရှိပါတယ်။'
+      : 'API Key အတည်ပြုပြီးပါပြီ။ ရွေးထားသော Model ကို မတွေ့ပါ။'
   };
 }
 function normalizeRatio(value) {
