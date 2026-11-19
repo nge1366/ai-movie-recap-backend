@@ -161,11 +161,116 @@ document.getElementById("testBackend").addEventListener("click", async () => {
   : `Model မအဆင်သင့်သေးပါ။ ${data.message || "Model ကို စစ်ပါ။"}`;
    
   
-
-  } catch (error) {
+ 
+   } catch (error) {
     status.textContent = "Backend ချိတ်ဆက်မရပါ။";
   }
 });
+
+document.getElementById("renderVideo").addEventListener("click", async () => {
+ 
+
+  const token = document.getElementById("backendToken").value.trim();
+  const status = document.getElementById("renderStatus");
+  const prompt = promptBox.value.trim();
+
+  if (!token) {
+    status.textContent = "Backend Token ထည့်ပေးပါ။";
+    return;
+  }
+
+  if (!prompt) {
+    status.textContent = "Video Prompt အရင်ရေးပေးပါ။";
+    return;
+  }
+
+  status.textContent = "ဗီဒီယို ထုတ်လုပ်ရန် တင်ပို့နေပါပြီ...";
+
+  try {
+    const response = await fetch(BACKEND_URL + "/jobs", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+      },
+      body: JSON.stringify({
+        type: "VIDEO_RENDER_JOB",
+        project: {
+          title: document.getElementById("title").value.trim(),
+          frameFormat: document.getElementById("ratio").value
+        },
+        scenes: [{
+          scene: 1,
+          duration: 4,
+          prompt: prompt
+        }]
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.jobId) {
+      status.textContent = "Render မစတင်နိုင်ပါ။ " +
+        (data.message || data.error || "Backend ကိုစစ်ပါ။");
+      return;
+    }
+
+    status.textContent = "Render စတင်ပါပြီ။ Job ID: " + data.jobId;
+
+    for (let i = 0; i < 60; i++) {
+      await new Promise(resolve => setTimeout(resolve, 10000));
+
+      const check = await fetch(
+        BACKEND_URL + "/jobs/" + encodeURIComponent(data.jobId),
+        {
+          headers: {
+            "Authorization": "Bearer " + token
+          }
+        }
+      );
+
+      const job = await check.json();
+
+      if (!check.ok) {
+        status.textContent = "အခြေအနေစစ်ဆေးမှု မအောင်မြင်ပါ။";
+        return;
+      }
+
+      status.textContent =
+        "ဗီဒီယို ထုတ်လုပ်နေပါပြီ။ " +
+        (job.progress || 0) + "%";
+
+      if (job.status === "completed") {
+        status.textContent = "ဗီဒီယို ထုတ်လုပ်ပြီးပါပြီ။";
+
+        (job.resultUrls || []).forEach(item => {
+          const link = document.createElement("a");
+          link.href = item.url;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = "Scene " + item.scene + " ဗီဒီယိုကြည့်ရန်";
+          link.style.display = "block";
+          link.style.color = "#a78bfa";
+          status.appendChild(link);
+        });
+
+        return;
+      }
+
+      if (["failed", "cancelled"].includes(job.status)) {
+        status.textContent = "ဗီဒီယိုထုတ်လုပ်မှု မအောင်မြင်ပါ။ " +
+          (job.error || "");
+        return;
+      }
+    }
+
+    status.textContent = "Render လုပ်နေဆဲပါ။ နောက်မှ Job ID ဖြင့် ပြန်စစ်ပါ။";
+
+  } catch (error) {
+    status.textContent = "Backend ချိတ်ဆက်မှု မအောင်မြင်ပါ။";
+  }
+});
+ 
 </script>
 </body>
 </html>
