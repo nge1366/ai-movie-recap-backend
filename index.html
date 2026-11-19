@@ -1,4 +1,3 @@
-HTML
 
 <!DOCTYPE html>
 <html lang="my">
@@ -73,143 +72,159 @@ button{width:100%;padding:14px;margin-top:14px;border:0;border-radius:9px;backgr
 
 <button id="prepare">✨ Prompt ပြင်ဆင်မည်</button>
 </section>
+
 <section class="panel">
 <h2>🚀 AI Video Render</h2>
 
 <label>Backend Access Token</label>
 <input id="backendToken" type="password"
-placeholder="ကိုယ့် Token ကို ဒီမှာထည့်ပါ">
+autocomplete="off" placeholder="ကိုယ့် Token ကို ဒီမှာထည့်ပါ">
 
 <button id="testBackend">Backend ချိတ်ဆက်မှု စမ်းမည်</button>
 <button id="renderVideo">🎬 ဗီဒီယို စတင်ထုတ်လုပ်မည်</button>
 
 <p id="renderStatus" class="note">အသင့်ဖြစ်နေပါပြီ။</p>
 </section>
+
 <section class="panel">
 <h2>📋 ပြင်ဆင်ထားသော Prompt</h2>
 <div id="result">Prompt မပြင်ဆင်ရသေးပါ။</div>
 <button class="secondary" id="copy">စာသားကူးယူရန်</button>
-<p class="note">ဤအဆင့်တွင် Prompt ကိုသာ ပြင်ဆင်ပေးပါသည်။ ဗီဒီယိုထုတ်လုပ်ရန် Backend ချိတ်ဆက်မှု လိုအပ်ပါသေးသည်။</p>
+<p class="note">Prompt ပြင်ဆင်ခြင်းနှင့် Video Render သည် သီးခြားအဆင့်များဖြစ်သည်။</p>
 </section>
 </main>
 
 <script>
-const promptBox=document.getElementById("prompt");
-const count=document.getElementById("count");
-const result=document.getElementById("result");
+const BACKEND_URL = "https://ai-movie-recap-backend-1.onrender.com";
+
+const promptBox = document.getElementById("prompt");
+const count = document.getElementById("count");
+const result = document.getElementById("result");
+const status = document.getElementById("renderStatus");
+const tokenInput = document.getElementById("backendToken");
+
+// Token ကို စာမျက်နှာဖွင့်ထားစဉ် ယာယီမှတ်ထားမည်
+let backendAccessToken = "";
+
+function getBackendToken(){
+  const enteredToken = tokenInput.value.trim();
+
+  if(enteredToken){
+    backendAccessToken = enteredToken;
+  }
+
+  return enteredToken || backendAccessToken;
+}
 
 promptBox.addEventListener("input",()=>{
- count.textContent=[...promptBox.value].length+" / 900";
+  count.textContent = [...promptBox.value].length + " / 900";
 });
 
 document.getElementById("prepare").addEventListener("click",()=>{
- const title=document.getElementById("title").value.trim();
- const story=document.getElementById("story").value.trim();
- const prompt=promptBox.value.trim();
+  const title = document.getElementById("title").value.trim();
+  const story = document.getElementById("story").value.trim();
+  const prompt = promptBox.value.trim();
 
- if(!title||!story||!prompt){
-  result.textContent="ဇာတ်လမ်းအမည်၊ ဇာတ်လမ်းအကြောင်းအရာနဲ့ Prompt ကို ဖြည့်ပေးပါ။";
-  return;
- }
- if([...prompt].length>900){
-  result.textContent="Prompt က စာလုံး ၉၀၀ ကျော်နေပါတယ်။";
-  return;
- }
+  if(!title || !story || !prompt){
+    result.textContent = "ဇာတ်လမ်းအမည်၊ ဇာတ်လမ်းအကြောင်းအရာနဲ့ Prompt ကို ဖြည့်ပေးပါ။";
+    return;
+  }
 
- result.textContent=
- "ဇာတ်လမ်းအမည်: "+title+
- "\nဇာတ်လမ်းအကြောင်း: "+story+
- "\nဇာတ်ဝင်ခန်း: "+document.getElementById("scenes").value+
- "\nအရည်အသွေး: "+document.getElementById("resolution").value+
- "\nဗီဒီယိုပုံစံ: "+document.getElementById("ratio").value+
- "\nဇာတ်လမ်းပုံစံ: "+document.getElementById("style").value+
- "\n\nPrompt:\n"+prompt;
+  if([...prompt].length > 900){
+    result.textContent = "Prompt က စာလုံး ၉၀၀ ကျော်နေပါတယ်။";
+    return;
+  }
+
+  result.textContent =
+    "ဇာတ်လမ်းအမည်: " + title +
+    "\nဇာတ်လမ်းအကြောင်း: " + story +
+    "\nဇာတ်ဝင်ခန်း: " + document.getElementById("scenes").value +
+    "\nအရည်အသွေး: " + document.getElementById("resolution").value +
+    "\nဗီဒီယိုပုံစံ: " + document.getElementById("ratio").value +
+    "\nဇာတ်လမ်းပုံစံ: " + document.getElementById("style").value +
+    "\n\nPrompt:\n" + prompt;
 });
 
 document.getElementById("copy").addEventListener("click",async()=>{
- try{
-  await navigator.clipboard.writeText(result.textContent);
-  alert("စာသားကို ကူးယူပြီးပါပြီ။");
- }catch(e){
-  alert("စာသားကို ဖိထားပြီး ကိုယ်တိုင်ကူးယူပါ။");
- }
+  try{
+    await navigator.clipboard.writeText(result.textContent);
+    alert("စာသားကို ကူးယူပြီးပါပြီ။");
+  }catch(e){
+    alert("စာသားကို ဖိထားပြီး ကိုယ်တိုင်ကူးယူပါ။");
+  }
 });
- const BACKEND_URL = "https://ai-movie-recap-backend-1.onrender.com";
 
-document.getElementById("testBackend").addEventListener("click", async () => {
-  const token = document.getElementById("backendToken").value.trim();
-  const status = document.getElementById("renderStatus");
+// Backend ချိတ်ဆက်မှု စမ်းသပ်ခြင်း
+document.getElementById("testBackend").addEventListener("click",async()=>{
+  const token = getBackendToken();
 
-  if (!token) {
+  if(!token){
     status.textContent = "Backend Token ထည့်ပေးပါ။";
     return;
   }
 
   status.textContent = "ချိတ်ဆက်နေပါပြီ...";
 
-  try {
-    const response = await fetch(BACKEND_URL + "/provider/test", {
-      method: "GET",
-      headers: {
-        "Authorization": "Bearer " + token
+  try{
+    const response = await fetch(BACKEND_URL + "/provider/test",{
+      method:"GET",
+      headers:{
+        "Authorization":"Bearer " + token
       }
     });
 
     const data = await response.json();
+
     status.textContent = data.ok
-  ? `Model အဆင်သင့်ပါပြီ။ ${data.model}`
-  : `Model မအဆင်သင့်သေးပါ။ ${data.message || "Model ကို စစ်ပါ။"}`;
-   
-  
- 
-   } catch (error) {
+      ? `Model အဆင်သင့်ပါပြီ။ ${data.model}`
+      : `Model မအဆင်သင့်သေးပါ။ ${data.message || "Model ကို စစ်ပါ။"}`;
+
+  }catch(error){
     status.textContent = "Backend ချိတ်ဆက်မရပါ။";
   }
 });
 
-document.getElementById("renderVideo").addEventListener("click", async () => {
- 
-
-  const token = document.getElementById("backendToken").value.trim();
-  const status = document.getElementById("renderStatus");
+// Video Render
+document.getElementById("renderVideo").addEventListener("click",async()=>{
+  const token = getBackendToken();
   const prompt = promptBox.value.trim();
 
-  if (!token) {
+  if(!token){
     status.textContent = "Backend Token ထည့်ပေးပါ။";
     return;
   }
 
-  if (!prompt) {
+  if(!prompt){
     status.textContent = "Video Prompt အရင်ရေးပေးပါ။";
     return;
   }
 
   status.textContent = "ဗီဒီယို ထုတ်လုပ်ရန် တင်ပို့နေပါပြီ...";
 
-  try {
-    const response = await fetch(BACKEND_URL + "/jobs", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
+  try{
+    const response = await fetch(BACKEND_URL + "/jobs",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer " + token
       },
-      body: JSON.stringify({
-        type: "VIDEO_RENDER_JOB",
-        project: {
-          title: document.getElementById("title").value.trim(),
-          frameFormat: document.getElementById("ratio").value
+      body:JSON.stringify({
+        type:"VIDEO_RENDER_JOB",
+        project:{
+          title:document.getElementById("title").value.trim(),
+          frameFormat:document.getElementById("ratio").value
         },
-        scenes: [{
-          scene: 1,
-          duration: 4,
-          prompt: prompt
+        scenes:[{
+          scene:1,
+          duration:4,
+          prompt:prompt
         }]
       })
     });
 
     const data = await response.json();
 
-    if (!response.ok || !data.jobId) {
+    if(!response.ok || !data.jobId){
       status.textContent = "Render မစတင်နိုင်ပါ။ " +
         (data.message || data.error || "Backend ကိုစစ်ပါ။");
       return;
@@ -217,21 +232,21 @@ document.getElementById("renderVideo").addEventListener("click", async () => {
 
     status.textContent = "Render စတင်ပါပြီ။ Job ID: " + data.jobId;
 
-    for (let i = 0; i < 60; i++) {
-      await new Promise(resolve => setTimeout(resolve, 10000));
+    for(let i=0;i<60;i++){
+      await new Promise(resolve=>setTimeout(resolve,10000));
 
       const check = await fetch(
         BACKEND_URL + "/jobs/" + encodeURIComponent(data.jobId),
         {
-          headers: {
-            "Authorization": "Bearer " + token
+          headers:{
+            "Authorization":"Bearer " + token
           }
         }
       );
 
       const job = await check.json();
 
-      if (!check.ok) {
+      if(!check.ok){
         status.textContent = "အခြေအနေစစ်ဆေးမှု မအောင်မြင်ပါ။";
         return;
       }
@@ -240,10 +255,10 @@ document.getElementById("renderVideo").addEventListener("click", async () => {
         "ဗီဒီယို ထုတ်လုပ်နေပါပြီ။ " +
         (job.progress || 0) + "%";
 
-      if (job.status === "completed") {
+      if(job.status === "completed"){
         status.textContent = "ဗီဒီယို ထုတ်လုပ်ပြီးပါပြီ။";
 
-        (job.resultUrls || []).forEach(item => {
+        (job.resultUrls || []).forEach(item=>{
           const link = document.createElement("a");
           link.href = item.url;
           link.target = "_blank";
@@ -257,7 +272,7 @@ document.getElementById("renderVideo").addEventListener("click", async () => {
         return;
       }
 
-      if (["failed", "cancelled"].includes(job.status)) {
+      if(["failed","cancelled"].includes(job.status)){
         status.textContent = "ဗီဒီယိုထုတ်လုပ်မှု မအောင်မြင်ပါ။ " +
           (job.error || "");
         return;
@@ -266,11 +281,10 @@ document.getElementById("renderVideo").addEventListener("click", async () => {
 
     status.textContent = "Render လုပ်နေဆဲပါ။ နောက်မှ Job ID ဖြင့် ပြန်စစ်ပါ။";
 
-  } catch (error) {
+  }catch(error){
     status.textContent = "Backend ချိတ်ဆက်မှု မအောင်မြင်ပါ။";
   }
 });
- 
 </script>
 </body>
 </html>
