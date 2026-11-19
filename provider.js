@@ -22,18 +22,38 @@ function adapterContract() {
     note: 'Each scene is submitted as a separate asynchronous provider job. Verify model duration/aspect/resolution support before rendering.'
   };
 }
+
 async function request(path, options = {}) {
   const response = await fetch(`${BASE}${path}`, {
     ...options,
-    headers: { Authorization: `Bearer ${API_KEY}`, Accept: 'application/json', ...(options.headers || {}) },
+    headers: {
+      Authorization: `Bearer ${API_KEY}`,
+      Accept: 'application/json',
+      ...(options.headers || {})
+    },
     signal: AbortSignal.timeout(45000)
   });
+
   const data = await response.json().catch(() => ({}));
+
   if (!response.ok) {
-    const msg = data?.error?.message || data?.message || `OpenRouter HTTP ${response.status}`;
-    const error = new Error(msg); error.status = response.status; throw error;
+    const msg =
+      data?.error?.message ||
+      data?.message ||
+      'Unknown provider error';
+
+    const error = new Error(
+      `OpenRouter HTTP ${response.status} at ${path}: ${msg}`
+    );
+
+    error.status = response.status;
+    error.providerPath = path;
+    error.providerCode = data?.error?.code || null;
+
+    throw error;
   }
-  return data;
+
+  return data;  
 }
 async function listVideoModels() {
   if (!API_KEY) throw new Error('OPENROUTER_API_KEY_MISSING');
