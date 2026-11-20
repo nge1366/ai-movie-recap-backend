@@ -5,6 +5,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI MOVIE RECAP STUDIO</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#111827">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
 <style>
 *{box-sizing:border-box}
 body{margin:0;padding:16px;background:#10121b;color:#fff;font-family:Arial,sans-serif}
@@ -285,6 +289,13 @@ document.getElementById("renderVideo").addEventListener("click",async()=>{
     status.textContent = "Backend ချိတ်ဆက်မှု မအောင်မြင်ပါ။";
   }
 });
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js");
+  });
+}
 </script>
 </body>
 </html>
