@@ -5,8 +5,9 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { mkdir, readFile, writeFile, rename } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import { dirname, resolve, extname } from 'node:path';
 import * as provider from './provider.js';
+import multer from 'multer';
 
 const app = express();
 const port = Number(process.env.PORT || 8787);
@@ -15,6 +16,39 @@ const allowedOrigin = process.env.CORS_ORIGIN || '';
 const API_VERSION = '46';
 const MAX_PROMPT_CHARS = 900;
 const MAX_SCENES = 60;
+
+const UPLOAD_DIR = resolve(process.env.UPLOAD_DIR || './uploads');
+const MAX_VIDEO_SIZE = 100 * 1024 * 1024;
+
+const allowedVideoTypes = new Set([
+  'video/mp4',
+  'video/webm',
+  'video/quicktime',
+  'video/x-matroska'
+]);
+
+const videoStorage = multer.diskStorage({
+  destination: (_req, _file, callback) => {
+    mkdir(UPLOAD_DIR, { recursive: true })
+      .then(() => callback(null, UPLOAD_DIR))
+      .catch(callback);
+  },
+  filename: (_req, file, callback) => {
+    callback(null, `${randomUUID()}${extname(file.originalname).toLowerCase()}`);
+  }
+});
+
+const videoUpload = multer({
+  storage: videoStorage,
+  limits: { fileSize: MAX_VIDEO_SIZE, files: 1 },
+  fileFilter: (_req, file, callback) => {
+    if (!allowedVideoTypes.has(file.mimetype)) {
+      return callback(new Error('UNSUPPORTED_VIDEO_FORMAT'));
+    }
+    callback(null, true);
+  }
+});
+
 
 if (!token || token.length < 24) {
   console.error('Set BACKEND_ACCESS_TOKEN in .env to a random secret of at least 24 characters.');
