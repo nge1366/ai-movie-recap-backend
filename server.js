@@ -13,7 +13,7 @@ const app = express();
 const port = Number(process.env.PORT || 8787);
 const token = process.env.BACKEND_ACCESS_TOKEN || '';
 const allowedOrigin = process.env.CORS_ORIGIN || '';
-const API_VERSION = '46';
+const API_VERSION = '47';
 const MAX_PROMPT_CHARS = 900;
 const MAX_SCENES = 60;
 
@@ -97,7 +97,34 @@ const auth = (req, res, next) => {
   if (a.length !== b.length || !timingSafeEqual(a, b)) return res.status(401).json({ error: 'UNAUTHORIZED' });
   next();
 };
+// V47: authenticated video upload
+app.post('/uploads', auth, (req, res) => {
+  videoUpload.single('video')(req, res, (error) => {
+    if (error) {
+      if (error.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ error: 'VIDEO_TOO_LARGE', maxSizeMB: 100 });
+      }
+      return res.status(400).json({
+        error: error.message === 'UNSUPPORTED_VIDEO_FORMAT'
+          ? 'UNSUPPORTED_VIDEO_FORMAT'
+          : 'UPLOAD_FAILED'
+      });
+    }
 
+    if (!req.file) {
+      return res.status(400).json({ error: 'VIDEO_REQUIRED' });
+    }
+
+    return res.status(201).json({
+      ok: true,
+      uploadId: randomUUID(),
+      filename: req.file.filename,
+      size: req.file.size,
+      mimetype: req.file.mimetype,
+      message: 'VIDEO_UPLOADED'
+    });
+  });
+});
 app.get('/health', (_req, res) => res.json({
   ok: true, apiVersion: API_VERSION, providerConfigured: Boolean(provider.isConfigured()),
   providerName: provider.providerName(), storage: 'persistent-json-file',
@@ -124,7 +151,7 @@ app.get('/capabilities', (_req, res) => res.json({
     { method: 'GET', path: '/capabilities', auth: false },
     { method: 'GET', path: '/provider/contract', auth: false },
     { method: 'GET', path: '/provider/test', auth: true },
-    { method: 'GET', path: '/provider/models', auth: true },
+    { method: 'POST', path: '/uploads', auth: true },
     { method: 'GET', path: '/jobs', auth: true, pagination: true },
     { method: 'POST', path: '/jobs', auth: true },
     { method: 'GET', path: '/jobs/{jobId}', auth: true },
