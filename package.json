@@ -1,6 +1,8 @@
+JSON
+
 {
-  "name": "ai-movie-recap-studio-backend-starter",
-  "version": "0.3.0",
+  "name": "ai-movie-recap-studio-backend",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -15,6 +17,7 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
-    "helmet": "^8.0.0"
+    "helmet": "^8.0.0",
+    "multer": "^2.0.2"
   }
 }
