@@ -68,6 +68,48 @@ app.use(rateLimit({ windowMs: 60_000, limit: 30, standardHeaders: 'draft-7', leg
 // V44: durable JSON file storage. For high-volume production, replace with a transactional database.
 const DATA_FILE = resolve(process.env.JOBS_DATA_FILE || './data/jobs.json');
 const jobs = new Map();
+// V47: Upload metadata storage
+const UPLOADS_FILE = resolve('./data/uploads.json');
+const uploads = new Map();
+
+async function loadUploads() {
+  try {
+    const data = await readFile(UPLOADS_FILE, 'utf8');
+    const records = JSON.parse(data);
+
+    if (!Array.isArray(records)) {
+      throw new Error('Invalid uploads store format');
+    }
+
+    for (const record of records) {
+      if (record && typeof record.uploadId === 'string') {
+        uploads.set(record.uploadId, record);
+      }
+    }
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+
+    await mkdir(dirname(UPLOADS_FILE), { recursive: true });
+    await writeFile(UPLOADS_FILE, '[]\n', { flag: 'wx' })
+      .catch(e => {
+        if (e.code !== 'EEXIST') throw e;
+      });
+  }
+}
+
+async function saveUploads() {
+  await mkdir(dirname(UPLOADS_FILE), { recursive: true });
+
+  const temp = `${UPLOADS_FILE}.${process.pid}.tmp`;
+
+  await writeFile(
+    temp,
+    JSON.stringify([...uploads.values()], null, 2) + '\n',
+    { mode: 0o600 }
+  );
+
+  await rename(temp, UPLOADS_FILE);
+}
 let persistChain = Promise.resolve();
 async function loadJobs() {
   try {
@@ -97,13 +139,18 @@ const auth = (req, res, next) => {
   if (a.length !== b.length || !timingSafeEqual(a, b)) return res.status(401).json({ error: 'UNAUTHORIZED' });
   next();
 };
+JavaScript
 // V47: authenticated video upload
 app.post('/uploads', auth, (req, res) => {
-  videoUpload.single('video')(req, res, (error) => {
+  videoUpload.single('video')(req, res, async (error) => {
     if (error) {
       if (error.code === 'LIMIT_FILE_SIZE') {
-        return res.status(413).json({ error: 'VIDEO_TOO_LARGE', maxSizeMB: 100 });
+        return res.status(413).json({
+          error: 'VIDEO_TOO_LARGE',
+          maxSizeMB: 100
+        });
       }
+
       return res.status(400).json({
         error: error.message === 'UNSUPPORTED_VIDEO_FORMAT'
           ? 'UNSUPPORTED_VIDEO_FORMAT'
@@ -115,14 +162,52 @@ app.post('/uploads', auth, (req, res) => {
       return res.status(400).json({ error: 'VIDEO_REQUIRED' });
     }
 
+    const uploadId = randomUUID();
+
+    uploads.set(uploadId, {
+      uploadId,
+      filename: req.file.filename,
+      size: req.file.size,
+      mimetype: req.file.mimetype,
+      createdAt: new Date().toISOString()
+    });
+
+    try {
+      await saveUploads();
+    } catch (saveError) {
+      console.error(
+        'Upload metadata save failed:',
+        saveError?.message || saveError
+      );
+
+      return res.status(500).json({
+        error: 'UPLOAD_METADATA_SAVE_FAILED'
+      });
+    }
+
     return res.status(201).json({
       ok: true,
-      uploadId: randomUUID(),
+      uploadId,
       filename: req.file.filename,
       size: req.file.size,
       mimetype: req.file.mimetype,
       message: 'VIDEO_UPLOADED'
     });
+  });
+});
+// V47: Get uploaded video metadata
+app.get('/uploads/:uploadId', auth, (req, res) => {
+  const upload = uploads.get(req.params.uploadId);
+
+  if (!upload) {
+    return res.status(404).json({
+      error: 'UPLOAD_NOT_FOUND'
+    });
+  }
+
+  return res.json({
+    ok: true,
+    upload
   });
 });
 app.get('/health', (_req, res) => res.json({
@@ -151,7 +236,9 @@ app.get('/capabilities', (_req, res) => res.json({
     { method: 'GET', path: '/capabilities', auth: false },
     { method: 'GET', path: '/provider/contract', auth: false },
     { method: 'GET', path: '/provider/test', auth: true },
+    { method: 'GET', path: '/provider/models', auth: true },
     { method: 'POST', path: '/uploads', auth: true },
+    { method: 'GET', path: '/uploads/{uploadId}', auth: true },
     { method: 'GET', path: '/jobs', auth: true, pagination: true },
     { method: 'POST', path: '/jobs', auth: true },
     { method: 'GET', path: '/jobs/{jobId}', auth: true },
@@ -253,4 +340,6 @@ app.post('/jobs/:jobId/cancel', auth, async (req, res) => {
 });
 
 await loadJobs();
+await loadUploads();
+
 app.listen(port, () => console.log(`AI Movie Recap backend v${API_VERSION} listening on port ${port}; restored ${jobs.size} job(s)`));
