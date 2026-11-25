@@ -1,7 +1,6 @@
-JSON
 
 {
-  "name": "ai-movie-recap-studio-backend",
+  "name": "ai-movie-recap-studio-backend-starter",
   "version": "0.4.0",
   "private": true,
   "type": "module",
